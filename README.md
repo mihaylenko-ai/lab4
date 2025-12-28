@@ -108,13 +108,97 @@ Spine устройств, обеспечивающих связность ниж
 **S1**
 
 ```
-
+hostname S1
+!
+interface Ethernet1
+   description <leaf L1>
+   mtu 9214
+   no switchport
+   ip address 10.1.1.1/30
+!
+interface Ethernet2
+   description <leaf L2>
+   mtu 9214
+   no switchport
+   ip address 10.1.2.1/30
+!
+interface Ethernet3
+   description <leaf L3>
+   mtu 9214
+   no switchport
+   ip address 10.1.3.1/30
+!
+interface Loopback0
+   ip address 172.16.1.1/32
+!
+ip routing
+!
+peer-filter LEAFS_ASN
+   10 match as-range 65501-65503 result accept
+!
+router bgp 65550
+   router-id 1.0.1.1
+   no bgp default ipv4-unicast
+   timers bgp 1 3
+   distance bgp 20 200 200
+   bgp listen range 10.0.0.0/8 peer-group LEAF peer-filter LEAFS_ASN
+   neighbor LEAF peer group
+   neighbor LEAF out-delay 0
+   neighbor LEAF bfd
+   !
+   address-family ipv4
+      neighbor LEAF activate
+      network 172.16.1.1/32
+!
+end
 ```
 
 **S2**
 
 ```
-
+hostname S2
+!
+interface Ethernet1
+   description <leaf L1>
+   mtu 9214
+   no switchport
+   ip address 10.2.1.1/30
+!
+interface Ethernet2
+   description <leaf L2>
+   mtu 9214
+   no switchport
+   ip address 10.2.2.1/30
+!
+interface Ethernet3
+   description <leaf L3>
+   mtu 9214
+   no switchport
+   ip address 10.2.3.1/30
+!
+interface Loopback0
+   ip address 172.16.2.1/32
+!
+ip routing
+!
+peer-filter LEAFS_ASN
+   10 match as-range 65501-65503 result accept
+!
+router bgp 65550
+   router-id 1.0.1.2
+   no bgp default ipv4-unicast
+   timers bgp 1 3
+   distance bgp 20 200 200
+   bgp listen range 10.0.0.0/8 peer-group LEAF peer-filter LEAFS_ASN
+   neighbor LEAF peer group
+   neighbor LEAF out-delay 0
+   neighbor LEAF bfd
+   !
+   address-family ipv4
+      neighbor LEAF activate
+      network 172.16.2.1/32
+!
+end
 ```
 
 #### Leaf устройства
@@ -122,19 +206,159 @@ Spine устройств, обеспечивающих связность ниж
 **L1**
 
 ```
-
+hostname L1
+!
+interface Ethernet1
+   description <spine S1>
+   mtu 9214
+   no switchport
+   ip address 10.1.1.2/30
+!
+interface Ethernet2
+   description <spine S2>
+   mtu 9214
+   no switchport
+   ip address 10.2.1.2/30
+!
+interface Ethernet8
+   description <PC11>
+   mtu 9214
+   no switchport
+   ip address 192.168.1.1/24
+!
+interface Loopback0
+   ip address 172.16.11.1/32
+!
+ip routing
+!
+router bgp 65501
+   router-id 1.0.0.1
+   no bgp default ipv4-unicast
+   timers bgp 1 3
+   distance bgp 20 200 200
+   maximum-paths 2 ecmp 2
+   neighbor SPINE peer group
+   neighbor SPINE remote-as 65550
+   neighbor SPINE out-delay 0
+   neighbor SPINE bfd
+   neighbor 10.1.1.1 peer group SPINE
+   neighbor 10.2.1.1 peer group SPINE
+   !
+   address-family ipv4
+      neighbor SPINE activate
+      network 172.16.11.1/32
+      network 192.168.1.0/24
+!
+end
 ```
 
 **L2**
 
 ```
-
+hostname L2
+!
+interface Ethernet1
+   description <spine S1>
+   mtu 9214
+   no switchport
+   ip address 10.1.2.2/30
+!
+interface Ethernet2
+   description <spine S2>
+   mtu 9214
+   no switchport
+   ip address 10.2.2.2/30
+!
+interface Ethernet8
+   description <PC21>
+   mtu 9214
+   no switchport
+   ip address 192.168.2.1/24
+!
+interface Loopback0
+   ip address 172.16.12.1/32
+!
+ip routing
+!
+router bgp 65502
+   router-id 1.0.0.2
+   no bgp default ipv4-unicast
+   timers bgp 1 3
+   distance bgp 20 200 200
+   maximum-paths 2 ecmp 2
+   neighbor SPINE peer group
+   neighbor SPINE remote-as 65550
+   neighbor SPINE out-delay 0
+   neighbor SPINE bfd
+   neighbor 10.1.2.1 peer group SPINE
+   neighbor 10.2.2.1 peer group SPINE
+   !
+   address-family ipv4
+      neighbor SPINE activate
+      network 172.16.12.1/32
+      network 192.168.2.0/24
+!
+end
 ```
 
 **L3**
 
 ```
-
+hostname L3
+!
+vlan 3
+   name users
+!
+interface Ethernet1
+   description <spine S1>
+   mtu 9214
+   no switchport
+   ip address 10.1.3.2/30
+!
+interface Ethernet2
+   description <spine S2>
+   mtu 9214
+   no switchport
+   ip address 10.2.3.2/30
+!
+interface Ethernet7
+   description <PC31>
+   mtu 9214
+   switchport access vlan 3
+!
+interface Ethernet8
+   description <PC32>
+   mtu 9214
+   switchport access vlan 3
+!
+interface Loopback0
+   ip address 172.16.13.1/32
+!
+interface Vlan3
+   description <User`s VLAN>
+   ip address 192.168.3.1/24
+!
+ip routing
+!
+router bgp 65503
+   router-id 1.0.0.3
+   no bgp default ipv4-unicast
+   timers bgp 1 3
+   distance bgp 20 200 200
+   maximum-paths 2 ecmp 2
+   neighbor SPINE peer group
+   neighbor SPINE remote-as 65550
+   neighbor SPINE out-delay 0
+   neighbor SPINE bfd
+   neighbor 10.1.3.1 peer group SPINE
+   neighbor 10.2.3.1 peer group SPINE
+   !
+   address-family ipv4
+      neighbor SPINE activate
+      network 172.16.13.1/32
+      network 192.168.3.0/24
+!
+end
 ```
 
 ## Описание типовых настроек
@@ -169,6 +393,8 @@ Spine устройств, обеспечивающих связность ниж
 
 ![S1](images/bgp_L1.jpg)
 
+![S1](images/bgp_as_L1.jpg)
+
 **Таблица соседства eBGP на коммутаторе L1**
 
 ![S1](images/neighbor_L1.jpg)
@@ -177,6 +403,9 @@ Spine устройств, обеспечивающих связность ниж
 
 ![S1](images/bgp_L2.jpg)
 
+![S1](images/bgp_as_L2.jpg)
+
+
 **Таблица соседства eBGP на коммутаторе L2**
 
 ![S1](images/neighbor_L2.jpg)
@@ -184,6 +413,9 @@ Spine устройств, обеспечивающих связность ниж
 **Таблица маршрутизации eBGP на коммутаторе L3**
 
 ![S1](images/bgp_L3.jpg)
+
+![S1](images/bgp_as_L3.jpg)
+
 
 **Таблица соседства eBGP на коммутаторе L3**
 
