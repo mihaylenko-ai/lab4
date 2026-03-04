@@ -149,6 +149,7 @@ router bgp 65550
    timers bgp 1 3
    distance bgp 20 200 200
    bgp listen range 10.0.0.0/8 peer-group LEAF peer-filter LEAFS_ASN
+   maximum-paths 2 ecmp 2
    neighbor LEAF peer group
    neighbor LEAF out-delay 0
    neighbor LEAF bfd
@@ -198,6 +199,7 @@ router bgp 65550
    timers bgp 1 3
    distance bgp 20 200 200
    bgp listen range 10.0.0.0/8 peer-group LEAF peer-filter LEAFS_ASN
+   maximum-paths 2 ecmp 2
    neighbor LEAF peer group
    neighbor LEAF out-delay 0
    neighbor LEAF bfd
